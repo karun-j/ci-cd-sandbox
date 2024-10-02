@@ -1,26 +1,14 @@
-name: Python Security Scan
+stages:
+  - test
+  - security_scan
 
-on: [push, pull_request]
-
-jobs:
-  bandit-security-scan:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-
-    - name: Install Bandit
-      run: pip install bandit
-
-    - name: Run Bandit Security Scan
-      run: bandit -r . -x tests -o bandit-report.txt -f txt
-
-    - name: Upload Bandit Report
-      uses: actions/upload-artifact@v3
-      with:
-        name: bandit-report
-        path: bandit-report.txt
+bandit-security-scan:
+  stage: security_scan
+  image: python:3.8
+  script:
+    - pip install bandit
+    - bandit -r src -x src/tests -o bandit-report.txt -f txt
+  artifacts:
+    paths:
+      - bandit-report.txt
+  when: always
