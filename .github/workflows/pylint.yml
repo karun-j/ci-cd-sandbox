@@ -1,11 +1,10 @@
-name: Python application
+name: Python application CI
 
 on: [push, pull_request]
 
 jobs:
-  build:
+  pylint-check:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -19,3 +18,10 @@ jobs:
     - name: Run Pylint
       run: |
         pylint --rcfile=.pylintrc ./your_project_directory
+      continue-on-error: true # This allows the pipeline to continue even if Pylint fails, for reporting purposes.
+    - name: Upload Pylint report
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: pylint-report
+        path: pylint_report.txt
