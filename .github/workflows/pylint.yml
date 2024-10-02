@@ -17,7 +17,7 @@ jobs:
         pip install pylint
     - name: Run Pylint
       run: |
-        pylint --rcfile=.pylintrc /main.py
+        pylint --rcfile=.pylintrc main.py
       continue-on-error: true # This allows the pipeline to continue even if Pylint fails, for reporting purposes.
     - name: Upload Pylint report
       uses: actions/upload-artifact@v3
