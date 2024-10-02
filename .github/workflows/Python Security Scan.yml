@@ -20,7 +20,7 @@ jobs:
       run: bandit -r . -x tests -o bandit-report.txt -f txt
 
     - name: Upload Bandit Report
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: bandit-report
         path: bandit-report.txt
