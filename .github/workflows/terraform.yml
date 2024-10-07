@@ -1,14 +1,18 @@
 # .github/workflows/main.yml
-name: Deploy Infrastructure
+name: 'Terraform CI/CD'
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'terraform/**.tf'
 
 jobs:
-  deploy_infrastructure:
+  terraform:
     runs-on: ubuntu-latest
+    name: 'Terraform'
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -17,10 +21,10 @@ jobs:
       uses: hashicorp/setup-terraform@v1
 
     - name: Terraform Init
-      run: terraform init
+      run: cd terraform && terraform init
 
     - name: Terraform Plan
-      run: terraform plan
+      run: cd terraform && terraform plan
 
     - name: Terraform Apply
-      run: terraform apply -auto-approve
+      run: cd terraform && terraform apply -auto-approve
