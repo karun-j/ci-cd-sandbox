@@ -1,34 +1,26 @@
-name: 'Terraform CI/CD'
+# .github/workflows/main.yml
+name: Deploy Infrastructure
 
 on:
   push:
     branches:
       - main
-    paths:
-      - 'terraform/**/*.tf'  # Trigger for any .tf files in terraform folder
 
 jobs:
-  terraform:
+  deploy_infrastructure:
     runs-on: ubuntu-latest
-    name: 'Terraform'
-
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-    - name: Setup Terraform
+    - name: Set up Terraform
       uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: '1.3.0'
 
     - name: Terraform Init
-      id: init
-      run: terraform init terraform  # Ensure you specify the path if needed
+      run: terraform init
 
     - name: Terraform Plan
-      id: plan
-      run: terraform plan terraform  # Run in the correct directory
+      run: terraform plan
 
     - name: Terraform Apply
-      id: apply
-      run: terraform apply -auto-approve terraform  # Run in the correct directory
+      run: terraform apply -auto-approve
