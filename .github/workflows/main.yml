@@ -1,25 +1,27 @@
-# .github/workflows/deploy.yml
-name: Deploy Application
+# .github/workflows/terraform.yml
+name: Terraform Apply
 
 on: [push]
 
 jobs:
-  deploy:
+  terraform:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-    - name: Set up Terraform
-      run: # Terraform setup commands
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
 
-    - name: Terraform Apply
-      run: |
-        set +e
-        terraform apply -auto-approve
-        exit_code=$?
-        set -e
-        if [ $exit_code -ne 0 ]; then
-          echo "Terraform apply failed"
-          exit $exit_code
-        fi
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Apply with Logging
+      run: terraform apply -auto-approve | tee terraform-apply.log
+      if: ${{ success() }}
+
+    - name: Upload Terraform Logs
+      uses: actions/upload-artifact@v2
+      with:
+        name: terraform-apply-logs
+        path: terraform-apply.log
+      if: ${{ always() }}
