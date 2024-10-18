@@ -6,29 +6,22 @@ jobs:
   build-and-debug:
     runs-on: ubuntu-latest
 
-    services:
-      app:
-        image: your-docker-image-name  # Replace with your image name
-        ports:
-          - 12345:12345
-
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
     - name: Build Docker image
-      run: docker build -t your-docker-image-name .  # Replace with your image name
+      run: docker build -t local-debug-image .  # Build the image locally
 
     - name: Run Docker container
       run: |
-        docker run --name app-container -d --rm -v ${PWD}:/app -p 12345:12345 your-docker-image-name
-        sleep 10  # Give it some time to start up and potentially hit a breakpoint
+        docker run --name app-container -d --rm -v ${PWD}:/app -p 12345:12345 local-debug-image  # Use the local image
+        sleep 10 # Give it some time to start up and potentially hit a breakpoint
 
     - name: Check for debugging session
       run: |
         if docker exec app-container pgrep -f "python ./debug.py"; then
           echo "Debugger has been activated due to an error."
-          # If applicable, retrieve logs (modify to your setup)
           docker exec app-container curl http://localhost:12345/debugger-logs
         else
           echo "No debugging session detected."
@@ -36,7 +29,7 @@ jobs:
 
     - name: Upload debugging logs
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: debugging-logs
-        path: ./debugging-logs.txt  # Modify to your log path
+        path: ./debugging-logs.txt
