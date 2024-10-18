@@ -1,20 +1,39 @@
-name: Python Application Debugging
+# .github/workflows/debug-pipeline.yml
+name: Debugging Pipeline  # Name of the workflow
 
-on: [push]
+# Trigger the workflow on push or pull request events
+on: [push, pull_request]
 
 jobs:
-  build-and-debug:
-
-    runs-on: ubuntu-latest
+  debug_job:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner for the job
 
     steps:
+    # Step 1: Check out the code from the repository
     - uses: actions/checkout@v3
+
+    # Step 2: Build the Docker image from the Dockerfile
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag python-debug
-    - name: Run Docker container with debugging
-      run: docker run -it --rm --name python-debug-container -v ${{ github.workspace }}/debug.log:/app/debug.log python-debug
-    - name: Upload debugging log
+      run: docker build -t my-python-app .  # Tag the image as 'my-python-app'
+
+    # Step 3: Run the Docker container for debugging
+    - name: Run the Docker container with debugging
+      run: |
+        docker run --name debug-container -d my-python-app  # Run the container in detached mode
+        sleep 10  # Wait briefly to allow the application to start
+
+        # Step 4: Check the container logs for errors
+        if docker logs debug-container 2>&1 | grep -q "Traceback"; then
+          # If an error is found in the logs, copy the debug.log file from the container
+          docker cp debug-container:/app/debug.log debug.log
+        fi
+
+        # Step 5: Clean up the Docker container
+        docker container rm -f debug-container  # Remove the container after debugging
+
+    # Step 6: Upload the debugging logs as an artifact
+    - name: Upload debugging logs
       uses: actions/upload-artifact@v3
       with:
-        name: debug-logs
-        path: debug.log
+        name: debugging-logs  # Name of the artifact
+        path: debug.log  # Path to the debug log file to be uploaded
