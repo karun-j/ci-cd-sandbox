@@ -1,48 +1,42 @@
-name: Continuous Integration  # Name of the workflow
+name: Continuous Integration
 
-# Trigger the workflow on push or pull request events
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build-and-debug:  # Job name
-    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
-
-    services:
-      app:
-        image: my-python-app  # Replace with your local image name
-        ports:
-          - 12345:12345  # Map port for accessing the application
+  build-and-debug:
+    runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout the repository
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # Step 2: Build the Docker image
     - name: Build Docker image
-      run: docker build -t my-python-app .  # Build the image
+      run: docker build -t local-debug-image .
 
-    # Step 3: Run the Docker container
     - name: Run Docker container
       run: |
-        docker run --name app-container -d --rm -v ${PWD}:/app -p 12345:12345 my-python-app
-        sleep 10  # Give it some time to start up and potentially hit a breakpoint
+        docker run --name app-container -d --rm -v ${{ github.workspace }}:/app -p 12345:12345 local-debug-image
+        sleep 10  # Allow time for the container to start and potentially hit a breakpoint
 
-    # Step 4: Check for debugging session
     - name: Check for debugging session
       run: |
         if docker exec app-container pgrep -f "python ./debug.py"; then
           echo "Debugger has been activated due to an error."
-          # Fetch and print the debugger logs
-          docker exec app-container curl http://localhost:12345/debugger-logs
+          # Here you would need to adapt how to fetch logs from your application
+          # This assumes you have set up a mechanism to retrieve logs
         else
           echo "No debugging session detected."
         fi
 
-    # Step 5: Upload debugging logs if there was a failure
     - name: Upload debugging logs
-      if: failure()  # Only run this step if the previous steps failed
+      if: failure()
       uses: actions/upload-artifact@v3
       with:
-        name: debugging-logs  # Name of the artifact
-        path: ./debugging-logs.txt  # Path to the log file to upload
+        name: debugging-logs
+        path: ./debugging-logs.txt
