@@ -1,35 +1,20 @@
-name: Continuous Integration
+name: Python Application Debugging
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build-and-debug:
+
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-
-    - name: Build Docker image
-      run: docker build -t local-debug-image .  # Build the image locally
-
-    - name: Run Docker container
-      run: |
-        docker run --name app-container -d --rm -v ${PWD}:/app -p 12345:12345 local-debug-image  # Use the local image
-        sleep 10 # Give it some time to start up and potentially hit a breakpoint
-
-    - name: Check for debugging session
-      run: |
-        if docker exec app-container pgrep -f "python ./debug.py"; then
-          echo "Debugger has been activated due to an error."
-          docker exec app-container curl http://localhost:12345/debugger-logs
-        else
-          echo "No debugging session detected."
-        fi
-
-    - name: Upload debugging logs
-      if: failure()
-      uses: actions/upload-artifact@v2
+    - uses: actions/checkout@v3 
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag python-debug
+    - name: Run Docker container with debugging
+      run: docker run -it --rm --name python-debug-container -v ${{ github.workspace }}/debug.log:/app/debug.log python-debug
+    - name: Upload debugging log
+      uses: actions/upload-artifact@v3
       with:
-        name: debugging-logs
-        path: ./debugging-logs.txt
+        name: debug-logs
+        path: debug.log
