@@ -1,31 +1,20 @@
-name: Debugging Pipeline
+name: Python Application Debugging
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
-  debug_job:
+  build-and-debug:
+
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-
     - name: Build the Docker image
-      run: docker build -t my-python-app .
-
-    - name: Run the Docker container with debugging
-      run: |
-        docker run --name debug-container -d my-python-app
-        # Wait for a moment to let the application start
-        sleep 10
-        # Check for errors and save logs
-        if docker logs debug-container 2>&1 | grep -q "Traceback"; then
-          docker cp debug-container:/app/debug.log debug.log
-        fi
-        # Clean up
-        docker container rm -f debug-container
-
-    - name: Upload debugging logs
+      run: docker build . --file Dockerfile --tag python-debug
+    - name: Run Docker container with debugging
+      run: docker run -it --rm --name python-debug-container -v ${{ github.workspace }}/debug.log:/app/debug.log python-debug
+    - name: Upload debugging log
       uses: actions/upload-artifact@v3
       with:
-        name: debugging-logs
+        name: debug-logs
         path: debug.log
