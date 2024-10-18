@@ -8,13 +8,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3 
+    - uses: actions/checkout@v3  # Checkout the repository
+
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag python-debug
+      run: docker build . --file Dockerfile --tag python-debug  # Build Docker image
+
     - name: Run Docker container with debugging
-      run: docker run -it --rm --name python-debug-container -v ${{ github.workspace }}/debug.log:/app/debug.log python-debug
+      run: |
+        # Run the Docker container and mount the debug.log to the local directory
+        docker run -it --rm \
+          --name python-debug-container \
+          -v ${{ github.workspace }}/debug.log:/app/debug.log \
+          python-debug  # Run the container
+
     - name: Upload debugging log
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3  # Upload the debug logs
       with:
         name: debug-logs
-        path: debug.log
+        path: debug.log  # Path to the log file to be uploaded
