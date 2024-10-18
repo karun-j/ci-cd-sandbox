@@ -1,26 +1,31 @@
-# .github/workflows/debug-pipeline.yml
-name: Automated Debugging Pipeline
+name: Debugging Pipeline
 
 on: [push, pull_request]
 
 jobs:
-  debug:
+  debug_job:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-      - name: Build Docker image
-        run: docker build -t python-debug .
+    - name: Build the Docker image
+      run: docker build -t my-python-app .
 
-      - name: Run Docker container and capture logs
-        run: |
-          docker run --name python-debug-container -d python-debug
-          docker logs python-debug-container > debug_logs.txt
+    - name: Run the Docker container with debugging
+      run: |
+        docker run --name debug-container -d my-python-app
+        # Wait for a moment to let the application start
+        sleep 10
+        # Check for errors and save logs
+        if docker logs debug-container 2>&1 | grep -q "Traceback"; then
+          docker cp debug-container:/app/debug.log debug.log
+        fi
+        # Clean up
+        docker container rm -f debug-container
 
-      - name: Store debugging logs as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: debug-logs
-          path: debug_logs.txt
+    - name: Upload debugging logs
+      uses: actions/upload-artifact@v3
+      with:
+        name: debugging-logs
+        path: debug.log
