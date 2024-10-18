@@ -1,28 +1,26 @@
-name: Python Application Debugging
+# .github/workflows/debug-pipeline.yml
+name: Automated Debugging Pipeline
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
-  build-and-debug:
-
+  debug:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3  # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag python-debug  # Build Docker image
+      - name: Build Docker image
+        run: docker build -t python-debug .
 
-    - name: Run Docker container with debugging
-      run: |
-        # Run the Docker container without TTY
-        docker run --rm \
-          --name python-debug-container \
-          -v ${{ github.workspace }}/debug.log:/app/debug.log \
-          python-debug  # Run the container
+      - name: Run Docker container and capture logs
+        run: |
+          docker run --name python-debug-container -d python-debug
+          docker logs python-debug-container > debug_logs.txt
 
-    - name: Upload debugging log
-      uses: actions/upload-artifact@v3  # Upload the debug logs
-      with:
-        name: debug-logs
-        path: debug.log  # Path to the log file to be uploaded
+      - name: Store debugging logs as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: debug-logs
+          path: debug_logs.txt
